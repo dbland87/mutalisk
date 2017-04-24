@@ -11,8 +11,8 @@ public class DisplayCreds : MonoBehaviour {
 		Text idText = GameObject.Find ("UserIdText").GetComponent<Text>();
 		Text tokenText = GameObject.Find ("TokenText").GetComponent<Text>();
 
-		usernameText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.username;
-		idText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.id.ToString();
-		tokenText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.fcmToken;
+//		usernameText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.username;
+//		idText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.id.ToString();
+//		tokenText.text = GameObject.Find ("DataController").GetComponent<DataController> ().userModel.fcmToken;
 	}
 }

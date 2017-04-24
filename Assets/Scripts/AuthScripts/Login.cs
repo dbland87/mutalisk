@@ -6,14 +6,22 @@ using UnityEngine.SceneManagement;
 
 public class Login : MonoBehaviour {
 
+	private DataController dataController;
+	private NetController netController;
 	private string usernameText;
 	private string fcmToken;
 	private bool tokenReceived;
+	private bool authenticated = true;
 
 	void Start(){
-		//Initialize firebase
+		//Get components
+		dataController = GameObject.Find("DataController").GetComponent<DataController>();
+		netController = GameObject.Find ("NetController").GetComponent<NetController> ();
+
+		//Initialize firebase, auto requests token
 		Firebase.Messaging.FirebaseMessaging.TokenReceived += OnTokenReceived;
-		Debug.Log ("Start");
+
+		netController.retrieveUser("lol");
 	}
 
 	public void onClickLogin(){
@@ -21,11 +29,12 @@ public class Login : MonoBehaviour {
 
 		//TODO Authenticate against api
 
-		if (usernameText.Length != 0 && tokenReceived) {
-			//TODO Shouldn't hard code id, need to get from API
-			UserModel userModel = new UserModel (1, usernameText, fcmToken);
-			DataController dataController = GameObject.Find("DataController").GetComponent<DataController>();
-			dataController.userModel = userModel;
+		if (usernameText.Length != 0 && authenticated) {
+			//Submit supplied user data to get complete user object
+			netController.UserReceivedEvent += OnUserReceived;
+			netController.retrieveUser(usernameText);
+
+			//UserModel userModel = new UserModel (1, usernameText, fcmToken);
 
 			SceneManager.LoadScene ("MainScene");
 		} else {
@@ -37,5 +46,10 @@ public class Login : MonoBehaviour {
 		tokenReceived = true;
 		fcmToken = token.Token;
 	}
+
+	static void OnUserReceived(string str){
+		Debug.Log (str);
+	}
+
 
 }
