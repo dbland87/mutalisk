@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class DataController : MonoBehaviour {
 
-	public UserModel userModel;
+	public User user;
 
 	// Use this for initialization
 	void Start () {

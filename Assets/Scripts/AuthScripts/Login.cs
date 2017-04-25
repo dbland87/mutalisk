@@ -21,7 +21,9 @@ public class Login : MonoBehaviour {
 		//Initialize firebase, auto requests token
 		Firebase.Messaging.FirebaseMessaging.TokenReceived += OnTokenReceived;
 
-		netController.retrieveUser("lol");
+		//TODO Delete me
+		netController.UserReceivedEvent += OnUserReceived;
+		netController.retrieveUser("Dingus");
 	}
 
 	public void onClickLogin(){
@@ -51,5 +53,7 @@ public class Login : MonoBehaviour {
 		Debug.Log (str);
 	}
 
-
+	static void onTokenReceived(string str){
+		Debug.Log (str);
+	}
 }
