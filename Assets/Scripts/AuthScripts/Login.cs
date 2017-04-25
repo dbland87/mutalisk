@@ -6,54 +6,90 @@ using UnityEngine.SceneManagement;
 
 public class Login : MonoBehaviour {
 
-	private DataController dataController;
-	private NetController netController;
-	private string usernameText;
+	private static string SCENE_MAIN = "MainScene";
+	private static string SCENE_CREATE_ACCOUNT = "CreateAccountScene";
+	private static DataController dataController;
+	private static NetController netController;
+	private static AuthController authController;
+
+	private static bool userReceived;
+	private static bool fTokenReceived;
+	private static bool fUserAuthenticated;
+	private static bool fTokenPosted;
+
+	private string emailText;
+	private string passwordText;
 	private string fcmToken;
-	private bool tokenReceived;
-	private bool authenticated = true;
 
 	void Start(){
 		//Get components
 		dataController = GameObject.Find("DataController").GetComponent<DataController>();
 		netController = GameObject.Find ("NetController").GetComponent<NetController> ();
+		authController = GameObject.Find ("AuthController").GetComponent<AuthController> ();
 
 		//Initialize firebase, auto requests token
 		Firebase.Messaging.FirebaseMessaging.TokenReceived += OnTokenReceived;
 
-		//TODO Delete me
+		//Event Subscriptions
 		netController.UserReceivedEvent += OnUserReceived;
-		netController.retrieveUser("Dingus");
+		netController.TokenPostedEvent += onFTokenPosted;
+
+		//If user is already authenticated, advance
+//		if (authController.user != null) {
+//			SceneManager.LoadScene (SCENE_MAIN);
+//		}
 	}
 
 	public void onClickLogin(){
-		usernameText = GameObject.Find("UnInput").GetComponent<InputField>().text;
+		emailText = GameObject.Find("EmailInput").GetComponent<InputField>().text;
+		passwordText = GameObject.Find("PwInput").GetComponent<InputField>().text;
 
-		//TODO Authenticate against api
+		authController.auth.SignInWithEmailAndPasswordAsync (emailText, passwordText).ContinueWith (task => {
+			if (task.IsCanceled) {
+				Debug.LogError ("SignInWithEmailAndPasswordAsync was canceled.");
+				return;
+			}
+			if (task.IsFaulted) {
+				Debug.LogError ("SignInWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+				return;
+			}
 
-		if (usernameText.Length != 0 && authenticated) {
-			//Submit supplied user data to get complete user object
-			netController.UserReceivedEvent += OnUserReceived;
-			netController.retrieveUser(usernameText);
+			fUserAuthenticated = true;
+			Firebase.Auth.FirebaseUser newUser = task.Result;
+			netController.retrieveUser (newUser.DisplayName);
 
-			//UserModel userModel = new UserModel (1, usernameText, fcmToken);
+			Debug.LogFormat ("User signed in successfully: {0} ({1})",
+				newUser.DisplayName, newUser.UserId);
 
-			SceneManager.LoadScene ("MainScene");
-		} else {
-			//TODO Tell 'em nope
-		}
+		});
+	}
+
+	public void onClickCreateAccount(){
+		SceneManager.LoadScene (SCENE_CREATE_ACCOUNT);
 	}
 
 	public void OnTokenReceived(object sender, Firebase.Messaging.TokenReceivedEventArgs token) {
-		tokenReceived = true;
+		fTokenReceived = true;
 		fcmToken = token.Token;
+		advanceScene ();
 	}
 
 	static void OnUserReceived(string str){
 		Debug.Log (str);
+		userReceived = true;
+		authController.user = JsonUtility.FromJson<User> (str);
+		advanceScene ();
 	}
 
-	static void onTokenReceived(string str){
+	static void onFTokenPosted(string str){
+		fTokenPosted = true;
 		Debug.Log (str);
+		advanceScene ();
+	}
+
+	static void advanceScene(){
+		if (fUserAuthenticated && fTokenPosted && userReceived) {
+			SceneManager.LoadScene (SCENE_MAIN);
+		}
 	}
 }
